@@ -70,7 +70,7 @@ export const sessionService = new InMemorySessionService();
 
 export const clankerAgent = new LlmAgent({
   name: 'clanker',
-  model: 'gemini-1.5-flash',
+  model: 'gemini-2.5-flash',
   instruction: buildBaseInstruction(),
   tools: [
     searchMemoryTool,
