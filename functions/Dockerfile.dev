@@ -3,5 +3,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 make g+
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
+
+# Fix @google/adk lodash-es alias bug: @google/adk-devtools override maps lodash-es -> CJS lodash.
+# npm install inside this project always installs the aliased CJS version (override poisoning).
+# Workaround: install real ESM lodash-es in isolated temp project (no overrides), then replace.
+RUN mkdir -p /tmp/esm && cd /tmp/esm && echo '{}' > package.json && npm install lodash-es@4.17.21
+RUN find /app/node_modules -name "lodash-es" -type d -prune -exec rm -rf {} \; 2>/dev/null; \
+    cp -r /tmp/esm/node_modules/lodash-es /app/node_modules/lodash-es; \
+    rm -rf /tmp/esm
+
 EXPOSE 8080
 CMD ["npx", "tsx", "watch", "src/main.ts"]

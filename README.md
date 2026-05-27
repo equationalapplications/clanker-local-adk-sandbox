@@ -10,7 +10,7 @@ It faithfully mirrors the eventual Cloud Run production architecture, substituti
 * **Memory Engine:** `@equationalapplications/core-llm-wiki`
 * **Database:** `better-sqlite3` (Mocking Cloud SQL)
 * **LLM Provider:** Gemini 1.5 Flash / Text-Embedding-004 (via AI Studio)
-* **Infrastructure:** Single Docker Container (Node 22 Alpine) with `AdkApiServer`
+* **Infrastructure:** Single Docker Container (Node 22 Debian slim) with `AdkApiServer`
 
 ---
 
@@ -37,9 +37,11 @@ GOOGLE_API_KEY=your_ai_studio_api_key_here
 Start the container with hot-reloading enabled:
 
 ```bash
-docker compose up --build
+docker compose build && docker compose down && docker compose up
 
 ```
+
+> **Note:** Always run `docker compose down` before `docker compose up` after a rebuild. Without it, Docker reuses the existing container from the old image and the rebuild has no effect.
 
 Once the container is running, open **[http://localhost:8080](https://www.google.com/search?q=http://localhost:8080)** in your browser to access the ADK web chat interface.
 
@@ -123,7 +125,12 @@ Because your host machine bind-mounts `./functions` to `/app`, macOS/Windows bin
 **2. ADK API Server is unreachable on localhost:8080**
 Ensure `ADK_HOST=0.0.0.0` is passed to the container. The `AdkApiServer` must bind to `0.0.0.0` (not `127.0.0.1`) for Docker port forwarding to work.
 
-**3. Integration Test 1 fails to find a memory fact**
+**3. `SyntaxError: The requested module 'lodash-es' does not provide an export named 'isEmpty'`**
+`@google/adk-devtools@1.1.x` ships an internal npm override that aliases `lodash-es` to CJS `lodash`. The ESM build then fails to import named exports.
+
+* **Fix:** Already patched in `Dockerfile.dev` — the build installs real `lodash-es@4.17.21` in an isolated temp directory and replaces all aliased copies. No action required unless you see this after clearing the Docker cache.
+
+**4. Integration Test 1 fails to find a memory fact**
 `WikiMemory.write()` drops an *Event*, not a *Fact*. Facts are only generated when `runLibrarian()` executes. Ensure the test suite explicitly calls `await wikiMemory.runLibrarian()` before asserting the read, overriding the default batch threshold.
 
 ---
