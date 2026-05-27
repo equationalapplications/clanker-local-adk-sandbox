@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@equationalapplications/core-llm-wiki": "^4.9.0",
-    "@google/adk": "^0.1.3",
+    "@google/adk": "^1.1.0",
     "@google/adk-devtools": "^1.1.0",
     "@google/genai": "^1.14.0",
     "better-sqlite3": "^9.0.0"
