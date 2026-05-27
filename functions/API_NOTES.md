@@ -9,7 +9,7 @@
 - **ADK tool schema property:** `parameters` (standard JSON Schema)
 - **Runner constructor:** `new Runner({ appName, agent, sessionService })`
 - **SessionService:** `InMemorySessionService` available
-- **adk web:** CLI-only (no programmatic API found) - will need to spawn child process
+- **AdkApiServer:** Available programmatically from `@google/adk-devtools` package
 
 ## WikiMemory API Shapes
 
@@ -44,5 +44,5 @@
 1. `before_model_callback` → `beforeModelCallback` (camelCase)
 2. Tool `execute` property (not handler)
 3. Fact text property is `body` (not `content` or `text`)
-4. `adk web` is CLI-only - need to spawn child process in main.ts
+4. `AdkApiServer` from `@google/adk-devtools` is used programmatically in main.ts
 5. `@google/adk` uses `InMemoryRunner` as an alternative to `Runner`

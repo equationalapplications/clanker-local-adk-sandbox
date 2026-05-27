@@ -4,7 +4,7 @@
 
 **Goal:** Build a single-container Docker sandbox to iterate on the Clanker ADK agent with hot-reload, WikiMemory integration, and tool scaffolding — faithfully mirroring the eventual Cloud Run architecture so the transition is a config swap, not a rewrite.
 
-**Architecture:** One Docker container running `adk web` via a `tsx watch`-managed entry point. `better-sqlite3` + a named Docker volume handle SQLite persistence. WikiMemory provides semantic long-term memory backed by Google AI Studio. A `before_model_callback` fires on every turn and injects memory context into the system instruction before the model is called.
+**Architecture:** One Docker container running `AdkApiServer` programmatically via a `tsx watch`-managed entry point. `better-sqlite3` + a named Docker volume handle SQLite persistence. WikiMemory provides semantic long-term memory backed by Google AI Studio. A `before_model_callback` fires on every turn and injects memory context into the system instruction before the model is called.
 
 **Tech Stack:** Node.js 22 (Alpine), TypeScript 5, `@google/adk`, `@google/genai`, `@equationalapplications/core-llm-wiki`, `better-sqlite3`, `tsx`, Docker Compose
 
@@ -26,7 +26,7 @@
 | `functions/src/tools/memory.ts` | `searchMemoryTool`, `writeObservationTool` — ADK tool wrappers |
 | `functions/src/tools/tasks.ts` | `createTaskTool`, `listTasksTool` — ADK tool wrappers |
 | `functions/src/agent.ts` | `LlmAgent` + `before_model_callback` + `Runner` |
-| `functions/src/main.ts` | Entry point — starts adk web server |
+| `functions/src/main.ts` | Entry point — starts AdkApiServer |
 | `functions/tests/suite.ts` | Integration test runner (3 tests, calls modules directly) |
 
 ---
@@ -221,7 +221,7 @@ Confirm:
 cat > /tmp/adk-api-notes.txt << 'EOF'
 LlmAgent callback param name: <fill in: before_model_callback or beforeModelCallback>
 Callback context type: <fill in>
-adk web: programmatic? <yes/no>  If yes, export name: <fill in>
+AdkApiServer: programmatic ✅ - exported from @google/adk-devtools
 ADK tool callable property: <fill in: execute | handler | function>
 ADK tool schema property: <fill in: parameters | inputSchema>
 wikiMemory.forget clearAll support: <yes/no>
@@ -783,7 +783,7 @@ git commit -m "feat: add clanker LlmAgent with before_model_callback memory inje
 **Files:**
 - Create: `functions/src/main.ts`
 
-**Before writing:** Check `/tmp/adk-api-notes.txt` — does `@google/adk` have a programmatic `startDevServer` / `startWebServer` export, or is `adk web` CLI-only?
+**Before writing:** Import `AdkApiServer` from `@google/adk-devtools` and use it programmatically in main.ts.
 
 - [ ] **Step 1: Choose launch strategy and write `functions/src/main.ts`**
 
@@ -840,7 +840,7 @@ Expected: no errors.
 
 ```bash
 git add functions/src/main.ts
-git commit -m "feat: add main entry point for adk web"
+git commit -m "feat: add main entry point with AdkApiServer"
 ```
 
 ---
@@ -863,7 +863,7 @@ export ADK_HOST=0.0.0.0
 cd functions && npx tsx src/main.ts
 ```
 
-Expected: starts adk web on port 8080 (startup log appears). If it fails with `ERR_MODULE_NOT_FOUND`, the import path has a bug — check `.js` extensions on all imports.
+Expected: starts AdkApiServer on port 8080 (startup log appears). If it fails with `ERR_MODULE_NOT_FOUND`, the import path has a bug — check `.js` extensions on all imports.
 
 - [ ] **Step 3: Verify the chat UI loads**
 

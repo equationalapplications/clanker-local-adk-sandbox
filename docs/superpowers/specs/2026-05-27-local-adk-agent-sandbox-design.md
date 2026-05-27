@@ -21,7 +21,7 @@ One Docker container. One process.
 ```
 docker-compose.yml
 └── agent (node:22-alpine)
-    ├── port 8080  →  adk web (browser chat UI)
+    ├── port 8080  →  AdkApiServer (browser chat UI)
     ├── bind mount: ./functions:/app  (hot-reload via tsx watch)
     ├── anon volume: /app/node_modules  (protects Alpine native bindings)
     └── named volume: wikidata:/data   (SQLite persistence)
@@ -35,7 +35,7 @@ No database container. `@equationalapplications/core-llm-wiki` runs on `better-s
 |---|---|
 | `GOOGLE_API_KEY` | Google AI Studio key — used by ADK agent + WikiMemory llmProvider |
 | `SQLITE_PATH` | `file:/data/local_dev.sqlite` — must target the named volume, not the bind mount |
-| `ADK_HOST` | `0.0.0.0` — required for `adk web` to be reachable from the host via port mapping |
+| `ADK_HOST` | `0.0.0.0` — required for `AdkApiServer` to be reachable from the host via port mapping |
 
 `GOOGLE_API_KEY` replaces the original OpenRouter requirement. ADK is built around Gemini; using a Google AI Studio key for local dev avoids mounting GCP service account JSON. Swap to Vertex credentials (`GOOGLE_APPLICATION_CREDENTIALS`) for Cloud Run deploy.
 
@@ -81,7 +81,7 @@ CMD ["npx", "tsx", "watch", "src/main.ts"]
 ```
 functions/
 ├── src/
-│   ├── main.ts               # entry point — starts adk web
+│   ├── main.ts               # entry point — starts AdkApiServer
 │   ├── agent.ts              # LlmAgent definition
 │   ├── tools/
 │   │   ├── memory.ts         # search_memory, write_observation
@@ -263,7 +263,7 @@ Single hardcoded character for PoC. No character management UI needed. Replace w
 | ADK tool throws | Tool returns structured error string to agent; agent handles in natural language |
 | `better-sqlite3` native binding mismatch | `docker compose exec agent npm rebuild better-sqlite3` |
 | `@google/adk` `lodash-es` ESM quirk | Add `"overrides": { "lodash-es": "lodash" }` to `package.json` |
-| `adk web` not reachable from host | Ensure `ADK_HOST=0.0.0.0` is set; `adk web` must bind to `0.0.0.0` not `127.0.0.1` |
+| ADK API Server not reachable from host | Ensure `ADK_HOST=0.0.0.0` is set; `AdkApiServer` must bind to `0.0.0.0` not `127.0.0.1` |
 
 ---
 
@@ -322,7 +322,7 @@ When integrating into Cloud Run:
 | `Map<sessionId, ClankerMessage[]>` | Drizzle query to Cloud SQL `messages` table |
 | `Map<characterId, AgentTask[]>` | Drizzle query to Cloud SQL `agent_tasks` table |
 | `config/seed.ts` TEST_CHARACTER | Drizzle query to Cloud SQL `characters` table |
-| `adk web` | Firebase callable or Cloud Run HTTP endpoint |
+| AdkApiServer | Firebase callable or Cloud Run HTTP endpoint |
 
 WikiMemory's `llmProvider` shape (`generateText`, `embed`) is identical between AI Studio and Vertex — only the credentials change.
 
@@ -332,7 +332,7 @@ WikiMemory's `llmProvider` shape (`generateText`, `embed`) is identical between 
 
 1. **SQLite path must target named volume:** `SQLITE_PATH=file:/data/local_dev.sqlite`. A relative path like `./local_dev.sqlite` writes to the bind mount and is lost when the volume is unmounted.
 2. **`node_modules` anonymous volume required:** The bind mount of `./functions:/app` overwrites the container's `node_modules` with macOS-compiled binaries, breaking `better-sqlite3` native bindings on Alpine. The `/app/node_modules` anonymous volume shadows this.
-3. **`adk web` must bind to `0.0.0.0`:** Default binds to `127.0.0.1`. The Docker port mapping is inert unless the server listens on all interfaces.
+3. **`AdkApiServer` must bind to `0.0.0.0`:** Default binds to `127.0.0.1`. The Docker port mapping is inert unless the server listens on all interfaces.
 4. **`lodash-es` ESM conflict in `@google/adk`:** Current npm package ships a CommonJS build with an `lodash-es` ESM dependency. Fix: `"overrides": { "lodash-es": "lodash" }` in `package.json`.
 5. **Test 1 requires explicit `runLibrarian()`:** `write()` inserts events, not facts. Facts only exist after librarian synthesis. Do not rely on `autoLibrarianThreshold` in tests.
 6. **Test teardown is mandatory:** Tests run against live SQLite + in-memory maps. Without teardown, repeated runs accumulate duplicate state and produce false positives.

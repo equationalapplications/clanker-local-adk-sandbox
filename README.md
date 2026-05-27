@@ -10,7 +10,7 @@ It faithfully mirrors the eventual Cloud Run production architecture, substituti
 * **Memory Engine:** `@equationalapplications/core-llm-wiki`
 * **Database:** `better-sqlite3` (Mocking Cloud SQL)
 * **LLM Provider:** Gemini 1.5 Flash / Text-Embedding-004 (via AI Studio)
-* **Infrastructure:** Single Docker Container (Node 22 Alpine) with `adk web`
+* **Infrastructure:** Single Docker Container (Node 22 Alpine) with `AdkApiServer`
 
 ---
 
@@ -77,7 +77,7 @@ docker compose exec agent npm run test:integration
     ├── tests/
     │   └── suite.ts              # Integration test runner
     └── src/
-        ├── main.ts               # Entry point (spawns adk web)
+        ├── main.ts               # Entry point (starts AdkApiServer)
         ├── agent.ts              # LlmAgent & Runner definitions
         ├── session.ts            # Transient chat state map
         ├── config/
@@ -120,8 +120,8 @@ Because your host machine bind-mounts `./functions` to `/app`, macOS/Windows bin
 
 * **Fix:** Run `docker compose exec agent npm rebuild better-sqlite3`
 
-**2. `adk web` is unreachable on localhost:8080**
-Ensure `ADK_HOST=0.0.0.0` is passed to the container. If the dev server binds to `127.0.0.1` inside the container, Docker port forwarding will fail.
+**2. ADK API Server is unreachable on localhost:8080**
+Ensure `ADK_HOST=0.0.0.0` is passed to the container. The `AdkApiServer` must bind to `0.0.0.0` (not `127.0.0.1`) for Docker port forwarding to work.
 
 **3. Integration Test 1 fails to find a memory fact**
 `WikiMemory.write()` drops an *Event*, not a *Fact*. Facts are only generated when `runLibrarian()` executes. Ensure the test suite explicitly calls `await wikiMemory.runLibrarian()` before asserting the read, overriding the default batch threshold.
