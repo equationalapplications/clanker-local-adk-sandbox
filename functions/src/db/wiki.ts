@@ -18,12 +18,16 @@ const db = new Database(dbPath);
 // Adapter to make better-sqlite3 compatible with SQLiteAdapter interface
 const dbAdapter: SQLiteAdapter = {
   execAsync(sql: string): Promise<void> {
-    return Promise.resolve(db.exec(sql) as void);
+    db.exec(sql);
+    return Promise.resolve();
   },
   runAsync(sql: string, params?: unknown[]): Promise<{ changes: number; lastInsertRowId: number }> {
     const stmt = db.prepare(sql);
     const result = stmt.run(params ?? []);
-    return Promise.resolve({ changes: result.changes, lastInsertRowId: result.lastInsertRowid });
+    return Promise.resolve({ 
+      changes: result.changes, 
+      lastInsertRowId: Number(result.lastInsertRowid) 
+    });
   },
   getAllAsync<T>(sql: string, params?: unknown[]): Promise<T[]> {
     const stmt = db.prepare(sql);
@@ -35,16 +39,20 @@ const dbAdapter: SQLiteAdapter = {
     const row = stmt.get(params ?? []) as T | undefined;
     return Promise.resolve(row ?? null);
   },
-  withTransactionAsync<T>(fn: (tx: SQLiteAdapter) => Promise<T>): Promise<T> {
+  async withTransactionAsync<T>(fn: (tx: SQLiteAdapter) => Promise<T>): Promise<T> {
     return db.transaction(async () => {
       const txAdapter: SQLiteAdapter = {
         execAsync(sql: string): Promise<void> {
-          return Promise.resolve(db.exec(sql) as void);
+          db.exec(sql);
+          return Promise.resolve();
         },
         runAsync(sql: string, params?: unknown[]): Promise<{ changes: number; lastInsertRowId: number }> {
           const stmt = db.prepare(sql);
           const result = stmt.run(params ?? []);
-          return Promise.resolve({ changes: result.changes, lastInsertRowId: result.lastInsertRowid });
+          return Promise.resolve({ 
+            changes: result.changes, 
+            lastInsertRowId: Number(result.lastInsertRowid) 
+          });
         },
         getAllAsync<T>(sql: string, params?: unknown[]): Promise<T[]> {
           const stmt = db.prepare(sql);
@@ -56,18 +64,20 @@ const dbAdapter: SQLiteAdapter = {
           const row = stmt.get(params ?? []) as T | undefined;
           return Promise.resolve(row ?? null);
         },
-        withTransactionAsync<T>(fn: (tx: SQLiteAdapter) => Promise<T>): Promise<T> {
+        async withTransactionAsync<T>(fn: (tx: SQLiteAdapter) => Promise<T>): Promise<T> {
           return Promise.reject(new Error('Nested transactions not supported'));
         },
         closeAsync(): Promise<void> {
-          return Promise.resolve(db.close());
+          db.close();
+          return Promise.resolve();
         },
       };
       return await fn(txAdapter);
     })();
   },
-  closeAsync(): Promise<void> {
-    return Promise.resolve(db.close());
+  async closeAsync(): Promise<void> {
+    db.close();
+    return Promise.resolve();
   },
 };
 

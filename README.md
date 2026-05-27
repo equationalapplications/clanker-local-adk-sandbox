@@ -9,7 +9,7 @@ It faithfully mirrors the eventual Cloud Run production architecture, substituti
 * **Framework:** Google Agent Development Kit (`@google/adk`)
 * **Memory Engine:** `@equationalapplications/core-llm-wiki`
 * **Database:** `better-sqlite3` (Mocking Cloud SQL)
-* **LLM Provider:** Gemini 1.5 Flash / Text-Embedding-004 (via AI Studio)
+* **LLM Provider:** Gemini 2.5 Flash / Text-Embedding-004 (via AI Studio)
 * **Infrastructure:** Single Docker Container (Node 22 Debian slim) with `AdkApiServer`
 
 ---
