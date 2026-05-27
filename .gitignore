@@ -1,0 +1,81 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.build/
+coverage/
+
+# Vite
+.vite/
+.idea/
+*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Environment files
+.env
+.env.*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+*.code-workspace
+*.sublime-workspace
+*.sublime-project
+
+# Docker
+docker-compose.override.yml
+**/docker-compose.override.yml
+**/docker-compose.*.local.yml
+Dockerfile.local
+.docker/
+
+# Optional npm cache
+.npm
+.eslintcache
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# MacOS
+.AppleDouble
+.LSOverride
+
+# Yarn
+.yarn/**
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
+# Parcel/Bundler
+.cache/
+
+# JetBrains
+*.iml
+.idea/
+
+# VS Code
+.history/
